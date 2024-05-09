@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -50,6 +51,21 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.icons)
+
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.gsonConverter)
+    implementation(libs.glide.compose)
+    implementation(libs.dagger.core)
+    ksp(libs.dagger.compiler)
+
+    implementation(libs.decompose.core)
+    implementation(libs.decompose.jetpack)
+    implementation(libs.mvikotlin.core)
+    implementation(libs.mvikotlin.main)
+    implementation(libs.mvikotlin.coroutines)
+    implementation(libs.mvikotlin.logging)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
