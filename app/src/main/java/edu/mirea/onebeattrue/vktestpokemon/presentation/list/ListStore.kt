@@ -26,13 +26,14 @@ interface ListStore : Store<Intent, State, Label> {
     data class State(
         val screenState: ScreenState,
         val isNextDataLoading: Boolean,
-        val hasNextData: Boolean
+        val isDataReloading: Boolean
     ) {
-        interface ScreenState {
+        sealed interface ScreenState {
             data object Loading : ScreenState
             data object Failure : ScreenState
             data class Success(
-                val list: List<Pokemon>
+                val list: List<Pokemon>,
+                val hasNextData: Boolean
             ) : ScreenState
         }
     }
@@ -55,7 +56,7 @@ class ListStoreFactory @Inject constructor(
             initialState = State(
                 screenState = State.ScreenState.Loading,
                 isNextDataLoading = false,
-                hasNextData = true
+                isDataReloading = false
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -69,10 +70,11 @@ class ListStoreFactory @Inject constructor(
 
     private sealed interface Msg {
         data object DataLoading : Msg
+        data object DataReloading : Msg
         data class DataLoaded(val list: List<Pokemon>) : Msg
         data object DataLoadedFailure : Msg
         data object NextDataLoading : Msg
-        data object NoNewData : Msg
+        data class NoNewData(val list: List<Pokemon>) : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -93,7 +95,7 @@ class ListStoreFactory @Inject constructor(
             when (intent) {
                 Intent.LoadNextData -> {
                     scope.launch {
-                        dispatch(Msg.DataLoading)
+                        dispatch(Msg.NextDataLoading)
                         try {
                             val screenState = getState().screenState
                             if (screenState is State.ScreenState.Success) {
@@ -103,7 +105,7 @@ class ListStoreFactory @Inject constructor(
                                 if (nextPokemonList != null) {
                                     dispatch(Msg.DataLoaded(oldPokemonList + nextPokemonList))
                                 } else {
-                                    dispatch(Msg.NoNewData)
+                                    dispatch(Msg.NoNewData(oldPokemonList))
                                 }
                             }
                         } catch (_: Exception) {
@@ -118,6 +120,7 @@ class ListStoreFactory @Inject constructor(
 
                 Intent.ReloadData -> {
                     scope.launch {
+                        dispatch(Msg.DataReloading)
                         try {
                             val pokemonList = reloadPokemonListUseCase()
                             dispatch(Msg.DataLoaded(pokemonList))
@@ -146,18 +149,30 @@ class ListStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
                 is Msg.DataLoaded -> copy(
-                    screenState = State.ScreenState.Success(msg.list),
+                    screenState = State.ScreenState.Success(
+                        list = msg.list,
+                        hasNextData = true
+                    ),
+                    isNextDataLoading = false,
+                    isDataReloading = false
+                )
+
+                is Msg.NoNewData -> copy(
+                    screenState = State.ScreenState.Success(
+                        list = msg.list,
+                        hasNextData = false
+                    ),
                     isNextDataLoading = false
                 )
 
-                Msg.NoNewData -> copy(
-                    isNextDataLoading = false,
-                    hasNextData = false
+                Msg.DataLoadedFailure -> copy(
+                    screenState = State.ScreenState.Failure,
+                    isDataReloading = false
                 )
 
-                Msg.DataLoadedFailure -> copy(screenState = State.ScreenState.Failure)
                 Msg.DataLoading -> copy(screenState = State.ScreenState.Loading)
                 Msg.NextDataLoading -> copy(isNextDataLoading = true)
+                Msg.DataReloading -> copy(isDataReloading = true)
             }
     }
 }

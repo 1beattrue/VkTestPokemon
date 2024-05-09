@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">VkTestPokemon</string>
+    <string name="app_name" translatable="false">Vk Test Pokemon</string>
+
+    <string name="list_app_bar_title">Pokemon List</string>
 </resources>

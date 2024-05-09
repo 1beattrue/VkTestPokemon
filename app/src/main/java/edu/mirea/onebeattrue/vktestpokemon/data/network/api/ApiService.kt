@@ -13,7 +13,7 @@ interface ApiService {
         @Query("limit") limit: Int
     ): PokemonListDto
 
-    @GET("pokemon/{id}")
+    @GET("pokemon/{name}")
     suspend fun getPokemonByName(
         @Path("name") name: String
     ): PokemonDto

@@ -1,5 +1,6 @@
 package edu.mirea.onebeattrue.vktestpokemon.data.repository
 
+import android.util.Log
 import edu.mirea.onebeattrue.vktestpokemon.data.mapper.toEntities
 import edu.mirea.onebeattrue.vktestpokemon.data.mapper.toEntity
 import edu.mirea.onebeattrue.vktestpokemon.data.network.api.ApiService
@@ -14,6 +15,7 @@ class PokemonRepositoryImpl @Inject constructor(
     private var offset = 0
 
     override suspend fun loadPokemonList(): List<Pokemon> {
+        Log.d("PokemonRepositoryImpl", "${apiService.loadPokemonList(offset, LIMIT).results}")
         return apiService.loadPokemonList(offset, LIMIT).results.map { nameDto ->
             apiService.getPokemonByName(nameDto.name)
         }.toEntities()
