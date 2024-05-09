@@ -1,6 +1,10 @@
 package edu.mirea.onebeattrue.vktestpokemon.domain.entity
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Pokemon(
+    val id: Long,
     val name: String,
     val weight: Int,
     val height: Int,

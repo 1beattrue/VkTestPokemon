@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class PokemonDto(
     @SerializedName("name") val name: String,
+    @SerializedName("id") val id: Long,
     @SerializedName("abilities") val abilities: List<AbilityDto>,
     @SerializedName("cries") val cries: CryDto,
     @SerializedName("sprites") val sprites: SpriteDto,

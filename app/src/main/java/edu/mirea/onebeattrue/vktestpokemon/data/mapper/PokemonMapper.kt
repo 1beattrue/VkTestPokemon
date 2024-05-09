@@ -5,6 +5,7 @@ import edu.mirea.onebeattrue.vktestpokemon.domain.entity.Pokemon
 
 fun PokemonDto.toEntity(): Pokemon =
     Pokemon(
+        id = id,
         name = name,
         weight = weight,
         height = height,
