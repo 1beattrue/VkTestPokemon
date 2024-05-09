@@ -22,7 +22,7 @@ mvikotlin-main = { group = "com.arkivanov.mvikotlin", name = "mvikotlin-main", v
 mvikotlin-coroutines = { group = "com.arkivanov.mvikotlin", name = "mvikotlin-extensions-coroutines", version.ref = "mvikotlin" }
 mvikotlin-logging = { group = "com.arkivanov.mvikotlin", name = "mvikotlin-logging", version.ref = "mvikotlin" }
 decompose-core = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
-decompose-jetpack = { group = "com.arkivanov.decompose", name = "extensions-compose-jetpack", version.ref = "decompose" }
+decompose-extensions = { group = "com.arkivanov.decompose", name = "extensions-compose", version.ref = "decompose" }
 dagger-core = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
 glide-compose = { group = "com.github.bumptech.glide", name = "compose", version.ref = "glide" }

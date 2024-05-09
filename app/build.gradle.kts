@@ -61,7 +61,7 @@ dependencies {
     ksp(libs.dagger.compiler)
 
     implementation(libs.decompose.core)
-    implementation(libs.decompose.jetpack)
+    implementation(libs.decompose.extensions)
     implementation(libs.mvikotlin.core)
     implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.coroutines)
