@@ -1,5 +1,6 @@
 package edu.mirea.onebeattrue.vktestpokemon.presentation.list
 
+import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -24,15 +25,17 @@ interface ListStore : Store<Intent, State, Label> {
     }
 
     data class State(
+        val list: List<Pokemon>,
         val screenState: ScreenState,
         val isNextDataLoading: Boolean,
+        val isNextDataLoadingFailure: Boolean,
         val isDataReloading: Boolean
     ) {
         sealed interface ScreenState {
             data object Loading : ScreenState
             data object Failure : ScreenState
+
             data class Success(
-                val list: List<Pokemon>,
                 val hasNextData: Boolean
             ) : ScreenState
         }
@@ -56,7 +59,9 @@ class ListStoreFactory @Inject constructor(
             initialState = State(
                 screenState = State.ScreenState.Loading,
                 isNextDataLoading = false,
-                isDataReloading = false
+                isDataReloading = false,
+                isNextDataLoadingFailure = false,
+                list = listOf()
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -73,8 +78,9 @@ class ListStoreFactory @Inject constructor(
         data object DataReloading : Msg
         data class DataLoaded(val list: List<Pokemon>) : Msg
         data object DataLoadedFailure : Msg
+        data object NextDataLoadedFailure : Msg
         data object NextDataLoading : Msg
-        data class NoNewData(val list: List<Pokemon>) : Msg
+        data object NoNewData : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -83,7 +89,8 @@ class ListStoreFactory @Inject constructor(
                 try {
                     val pokemonList = loadPokemonListUseCase()
                     dispatch(Action.LoadData(pokemonList))
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("ListStore", "${e.message}")
                     dispatch(Action.FailureLoading)
                 }
             }
@@ -97,19 +104,16 @@ class ListStoreFactory @Inject constructor(
                     scope.launch {
                         dispatch(Msg.NextDataLoading)
                         try {
-                            val screenState = getState().screenState
-                            if (screenState is State.ScreenState.Success) {
-                                val oldPokemonList = screenState.list
-                                val nextPokemonList = loadNextPokemonListUseCase()
-
-                                if (nextPokemonList != null) {
-                                    dispatch(Msg.DataLoaded(oldPokemonList + nextPokemonList))
-                                } else {
-                                    dispatch(Msg.NoNewData(oldPokemonList))
-                                }
+                            val oldList = getState().list
+                            val nextList = loadNextPokemonListUseCase()
+                            if (nextList != null) {
+                                dispatch(Msg.DataLoaded(oldList + nextList))
+                            } else {
+                                dispatch(Msg.NoNewData)
                             }
-                        } catch (_: Exception) {
-                            dispatch(Msg.DataLoadedFailure)
+                        } catch (e: Exception) {
+                            Log.e("ListStore", "${e.message}")
+                            dispatch(Msg.NextDataLoadedFailure)
                         }
                     }
                 }
@@ -122,9 +126,11 @@ class ListStoreFactory @Inject constructor(
                     scope.launch {
                         dispatch(Msg.DataReloading)
                         try {
+                            val oldList = getState().list
                             val pokemonList = reloadPokemonListUseCase()
-                            dispatch(Msg.DataLoaded(pokemonList))
-                        } catch (_: Exception) {
+                            dispatch(Msg.DataLoaded(oldList + pokemonList))
+                        } catch (e: Exception) {
+                            Log.e("ListStore", "${e.message}")
                             dispatch(Msg.DataLoadedFailure)
                         }
                     }
@@ -150,19 +156,20 @@ class ListStoreFactory @Inject constructor(
             when (msg) {
                 is Msg.DataLoaded -> copy(
                     screenState = State.ScreenState.Success(
-                        list = msg.list,
                         hasNextData = true
                     ),
+                    list = msg.list,
                     isNextDataLoading = false,
-                    isDataReloading = false
+                    isDataReloading = false,
+                    isNextDataLoadingFailure = false
                 )
 
                 is Msg.NoNewData -> copy(
                     screenState = State.ScreenState.Success(
-                        list = msg.list,
                         hasNextData = false
                     ),
-                    isNextDataLoading = false
+                    isNextDataLoading = false,
+                    isNextDataLoadingFailure = false
                 )
 
                 Msg.DataLoadedFailure -> copy(
@@ -173,6 +180,10 @@ class ListStoreFactory @Inject constructor(
                 Msg.DataLoading -> copy(screenState = State.ScreenState.Loading)
                 Msg.NextDataLoading -> copy(isNextDataLoading = true)
                 Msg.DataReloading -> copy(isDataReloading = true)
+
+                Msg.NextDataLoadedFailure -> copy(
+                    isNextDataLoadingFailure = true
+                )
             }
     }
 }
