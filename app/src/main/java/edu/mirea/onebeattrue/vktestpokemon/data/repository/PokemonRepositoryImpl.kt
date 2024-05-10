@@ -1,6 +1,5 @@
 package edu.mirea.onebeattrue.vktestpokemon.data.repository
 
-import android.util.Log
 import edu.mirea.onebeattrue.vktestpokemon.data.mapper.toEntities
 import edu.mirea.onebeattrue.vktestpokemon.data.mapper.toEntity
 import edu.mirea.onebeattrue.vktestpokemon.data.network.api.ApiService
@@ -13,21 +12,19 @@ class PokemonRepositoryImpl @Inject constructor(
 ) : PokemonRepository {
 
     private var offset = 0
+    private val pokemonSet: MutableSet<Pokemon> = mutableSetOf()
 
     override suspend fun loadPokemonList(): List<Pokemon> {
-        Log.d("PokemonRepositoryImpl", "${apiService.loadPokemonList(offset, LIMIT).results}")
-        return apiService.loadPokemonList(offset, LIMIT).results.map { nameDto ->
+        val loadedData = apiService.loadPokemonList(offset, LIMIT).results.map { nameDto ->
             apiService.getPokemonByName(nameDto.name)
         }.toEntities()
+        pokemonSet.addAll(loadedData)
+        return pokemonSet.toList()
     }
 
-    override suspend fun reloadPokemonList(): List<Pokemon> {
-        return loadPokemonList()
-    }
-
-    override suspend fun loadNextPokemonList(): List<Pokemon>? {
+    override suspend fun loadNextPokemonList(): List<Pokemon> {
         offset += 20
-        return loadPokemonList().ifEmpty { null }
+        return loadPokemonList()
     }
 
     override suspend fun getPokemonByName(name: String): Pokemon {

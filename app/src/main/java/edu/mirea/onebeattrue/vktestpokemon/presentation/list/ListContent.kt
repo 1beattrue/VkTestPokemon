@@ -64,7 +64,7 @@ fun ListContent(
     val state by component.model.collectAsState()
 
     val pullRefreshState =
-        rememberPullRefreshState(state.isDataReloading, { component.reloadData() })
+        rememberPullRefreshState(state.isLoading, { component.reloadData() })
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -83,59 +83,37 @@ fun ListContent(
                 .fillMaxSize()
                 .pullRefresh(pullRefreshState)
         ) {
-            when (val screenState = state.screenState) {
-                ListStore.State.ScreenState.Failure -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+            LazyVerticalGrid(
+                modifier = modifier.fillMaxSize(),
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    bottom = 32.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(items = state.list, key = { it.id }) { pokemon ->
+                    PokemonCard(
+                        modifier = Modifier.animateItemPlacement(),
+                        pokemon = pokemon
                     ) {
-                        item {
-                            Failure()
-                        }
+                        component.openDetails(pokemon)
                     }
                 }
-
-                ListStore.State.ScreenState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-
-                is ListStore.State.ScreenState.Success -> {
-                    LazyVerticalGrid(
-                        modifier = modifier.fillMaxSize(),
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(
-                            start = 16.dp,
-                            top = 16.dp,
-                            end = 16.dp,
-                            bottom = 32.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(items = state.list, key = { it.id }) { pokemon ->
-                            PokemonCard(
-                                modifier = Modifier.animateItemPlacement(),
-                                pokemon = pokemon
-                            ) {
-                                component.openDetails(pokemon)
-                            }
-                        }
-                        loadNext(
-                            hasNextData = screenState.hasNextData,
-                            isNextDataLoading = state.isNextDataLoading,
-                            isNextDataLoadingFailure = state.isNextDataLoadingFailure,
-                            onLoadNextClick = { component.loadNextData() },
-                            onReloadClick = { component.reloadData() }
-                        )
-                    }
-                }
+                loadNext(
+                    hasNextData = state.hasNextData,
+                    isNextDataLoading = state.isLoading,
+                    isNextDataLoadingFailure = state.isFailure,
+                    onLoadNextClick = { component.loadNextData() },
+                    onReloadClick = { component.reloadData() }
+                )
             }
 
             PullRefreshIndicator(
-                state.isDataReloading,
+                state.isLoading,
                 pullRefreshState,
                 Modifier.align(Alignment.TopCenter)
             )
@@ -155,13 +133,20 @@ private fun LazyGridScope.loadNext(
         item(
             span = { GridItemSpan(2) }
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(16.dp),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (isNextDataLoadingFailure) {
+                    Failure()
+                }
+
+
+
                 if (isNextDataLoading) {
                     CircularProgressIndicator()
                 } else {
@@ -176,10 +161,6 @@ private fun LazyGridScope.loadNext(
                     ) {
                         Text(text = stringResource(R.string.load_more))
                     }
-                }
-
-                if (isNextDataLoadingFailure) {
-                    Failure()
                 }
             }
         }

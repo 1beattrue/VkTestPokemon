@@ -9,7 +9,6 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import edu.mirea.onebeattrue.vktestpokemon.domain.entity.Pokemon
 import edu.mirea.onebeattrue.vktestpokemon.domain.usecase.LoadNextPokemonListUseCase
 import edu.mirea.onebeattrue.vktestpokemon.domain.usecase.LoadPokemonListUseCase
-import edu.mirea.onebeattrue.vktestpokemon.domain.usecase.ReloadPokemonListUseCase
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.Intent
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.Label
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.State
@@ -20,26 +19,17 @@ interface ListStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
         data class OpenDetails(val pokemon: Pokemon) : Intent
+
         data object LoadNextData : Intent
         data object ReloadData : Intent
     }
 
     data class State(
         val list: List<Pokemon>,
-        val screenState: ScreenState,
-        val isNextDataLoading: Boolean,
-        val isNextDataLoadingFailure: Boolean,
-        val isDataReloading: Boolean
-    ) {
-        sealed interface ScreenState {
-            data object Loading : ScreenState
-            data object Failure : ScreenState
-
-            data class Success(
-                val hasNextData: Boolean
-            ) : ScreenState
-        }
-    }
+        val isLoading: Boolean,
+        val isFailure: Boolean,
+        val hasNextData: Boolean
+    )
 
     sealed interface Label {
         data class OpenDetails(val pokemon: Pokemon) : Label
@@ -49,7 +39,6 @@ interface ListStore : Store<Intent, State, Label> {
 class ListStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val loadPokemonListUseCase: LoadPokemonListUseCase,
-    private val reloadPokemonListUseCase: ReloadPokemonListUseCase,
     private val loadNextPokemonListUseCase: LoadNextPokemonListUseCase
 ) {
 
@@ -57,11 +46,10 @@ class ListStoreFactory @Inject constructor(
         object : ListStore, Store<Intent, State, Label> by storeFactory.create(
             name = "ListStore",
             initialState = State(
-                screenState = State.ScreenState.Loading,
-                isNextDataLoading = false,
-                isDataReloading = false,
-                isNextDataLoadingFailure = false,
-                list = listOf()
+                list = listOf(),
+                isLoading = true,
+                isFailure = false,
+                hasNextData = true
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -75,11 +63,8 @@ class ListStoreFactory @Inject constructor(
 
     private sealed interface Msg {
         data object DataLoading : Msg
-        data object DataReloading : Msg
         data class DataLoaded(val list: List<Pokemon>) : Msg
-        data object DataLoadedFailure : Msg
-        data object NextDataLoadedFailure : Msg
-        data object NextDataLoading : Msg
+        data object FailureLoading : Msg
         data object NoNewData : Msg
     }
 
@@ -87,8 +72,8 @@ class ListStoreFactory @Inject constructor(
         override fun invoke() {
             scope.launch {
                 try {
-                    val pokemonList = loadPokemonListUseCase()
-                    dispatch(Action.LoadData(pokemonList))
+                    val data = loadPokemonListUseCase()
+                    dispatch(Action.LoadData(data))
                 } catch (e: Exception) {
                     Log.e("ListStore", "${e.message}")
                     dispatch(Action.FailureLoading)
@@ -102,18 +87,31 @@ class ListStoreFactory @Inject constructor(
             when (intent) {
                 Intent.LoadNextData -> {
                     scope.launch {
-                        dispatch(Msg.NextDataLoading)
+                        dispatch(Msg.DataLoading)
                         try {
-                            val oldList = getState().list
-                            val nextList = loadNextPokemonListUseCase()
-                            if (nextList != null) {
-                                dispatch(Msg.DataLoaded(oldList + nextList))
+                            val oldData = getState().list
+                            val data = loadNextPokemonListUseCase()
+                            if (oldData != data) {
+                                dispatch(Msg.DataLoaded(data))
                             } else {
                                 dispatch(Msg.NoNewData)
                             }
                         } catch (e: Exception) {
                             Log.e("ListStore", "${e.message}")
-                            dispatch(Msg.NextDataLoadedFailure)
+                            dispatch(Msg.FailureLoading)
+                        }
+                    }
+                }
+
+                Intent.ReloadData -> {
+                    scope.launch {
+                        dispatch(Msg.DataLoading)
+                        try {
+                            val data = loadPokemonListUseCase()
+                            dispatch(Msg.DataLoaded(data))
+                        } catch (e: Exception) {
+                            Log.e("ListStore", "${e.message}")
+                            dispatch(Msg.FailureLoading)
                         }
                     }
                 }
@@ -121,31 +119,13 @@ class ListStoreFactory @Inject constructor(
                 is Intent.OpenDetails -> {
                     publish(Label.OpenDetails(intent.pokemon))
                 }
-
-                Intent.ReloadData -> {
-                    scope.launch {
-                        dispatch(Msg.DataReloading)
-                        try {
-                            val oldList = getState().list
-                            val pokemonList = reloadPokemonListUseCase()
-                            if (oldList != pokemonList) {
-                                dispatch(Msg.DataLoaded(oldList + pokemonList))
-                            } else {
-                                dispatch(Msg.DataLoaded(oldList))
-                            }
-                        } catch (e: Exception) {
-                            Log.e("ListStore", "${e.message}")
-                            dispatch(Msg.DataLoadedFailure)
-                        }
-                    }
-                }
             }
         }
 
         override fun executeAction(action: Action, getState: () -> State) {
             when (action) {
                 Action.FailureLoading -> {
-                    dispatch(Msg.DataLoadedFailure)
+                    dispatch(Msg.FailureLoading)
                 }
 
                 is Action.LoadData -> {
@@ -159,35 +139,24 @@ class ListStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
                 is Msg.DataLoaded -> copy(
-                    screenState = State.ScreenState.Success(
-                        hasNextData = true
-                    ),
                     list = msg.list,
-                    isNextDataLoading = false,
-                    isDataReloading = false,
-                    isNextDataLoadingFailure = false
+                    isLoading = false,
+                    isFailure = false,
                 )
 
-                is Msg.NoNewData -> copy(
-                    screenState = State.ScreenState.Success(
-                        hasNextData = false
-                    ),
-                    isNextDataLoading = false,
-                    isNextDataLoadingFailure = false
+                Msg.DataLoading -> copy(
+                    isLoading = true
                 )
 
-                Msg.DataLoadedFailure -> copy(
-                    screenState = State.ScreenState.Failure,
-                    isDataReloading = false
+                Msg.FailureLoading -> copy(
+                    isLoading = false,
+                    isFailure = true
                 )
 
-                Msg.DataLoading -> copy(screenState = State.ScreenState.Loading)
-                Msg.NextDataLoading -> copy(isNextDataLoading = true)
-                Msg.DataReloading -> copy(isDataReloading = true)
-
-                Msg.NextDataLoadedFailure -> copy(
-                    isNextDataLoading = false,
-                    isNextDataLoadingFailure = true
+                Msg.NoNewData -> copy(
+                    isLoading = false,
+                    isFailure = false,
+                    hasNextData = false
                 )
             }
     }

@@ -6,9 +6,7 @@ interface PokemonRepository {
 
     suspend fun loadPokemonList(): List<Pokemon>
 
-    suspend fun reloadPokemonList(): List<Pokemon>
-
-    suspend fun loadNextPokemonList(): List<Pokemon>?
+    suspend fun loadNextPokemonList(): List<Pokemon>
 
     suspend fun getPokemonByName(name: String): Pokemon
 }

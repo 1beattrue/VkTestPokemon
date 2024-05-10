@@ -7,7 +7,7 @@ import javax.inject.Inject
 data class LoadNextPokemonListUseCase @Inject constructor(
     private val pokemonRepository: PokemonRepository
 ) {
-    suspend operator fun invoke(): List<Pokemon>? {
+    suspend operator fun invoke(): List<Pokemon> {
         return pokemonRepository.loadNextPokemonList()
     }
 }
