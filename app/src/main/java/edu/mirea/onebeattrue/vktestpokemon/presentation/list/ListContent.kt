@@ -8,15 +8,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -25,13 +29,13 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,7 +51,11 @@ import edu.mirea.onebeattrue.vktestpokemon.R
 import edu.mirea.onebeattrue.vktestpokemon.domain.entity.Pokemon
 
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 fun ListContent(
     modifier: Modifier = Modifier,
@@ -59,7 +67,15 @@ fun ListContent(
         rememberPullRefreshState(state.isDataReloading, { component.reloadData() })
 
     Scaffold(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(title = {
+                Text(
+                    text = stringResource(R.string.list_app_bar_title),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            })
+        }
     ) { paddingValues ->
         Box(
             Modifier
@@ -67,7 +83,7 @@ fun ListContent(
                 .fillMaxSize()
                 .pullRefresh(pullRefreshState)
         ) {
-            when (state.screenState) {
+            when (val screenState = state.screenState) {
                 ListStore.State.ScreenState.Failure -> {
                     LazyColumn(
                         modifier = Modifier
@@ -77,21 +93,7 @@ fun ListContent(
                         verticalArrangement = Arrangement.Center
                     ) {
                         item {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Error,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = stringResource(id = R.string.error_text),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
+                            Failure()
                         }
                     }
                 }
@@ -108,7 +110,7 @@ fun ListContent(
                             start = 16.dp,
                             top = 16.dp,
                             end = 16.dp,
-                            bottom = 64.dp
+                            bottom = 32.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(24.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -121,11 +123,13 @@ fun ListContent(
                                 component.openDetails(pokemon)
                             }
                         }
-                        item {
-                            SideEffect {
-                                component.loadNextData()
-                            }
-                        }
+                        loadNext(
+                            hasNextData = screenState.hasNextData,
+                            isNextDataLoading = state.isNextDataLoading,
+                            isNextDataLoadingFailure = state.isNextDataLoadingFailure,
+                            onLoadNextClick = { component.loadNextData() },
+                            onReloadClick = { component.reloadData() }
+                        )
                     }
                 }
             }
@@ -138,6 +142,72 @@ fun ListContent(
         }
     }
 }
+
+
+private fun LazyGridScope.loadNext(
+    hasNextData: Boolean,
+    isNextDataLoading: Boolean,
+    isNextDataLoadingFailure: Boolean,
+    onLoadNextClick: () -> Unit,
+    onReloadClick: () -> Unit
+) {
+    if (hasNextData) {
+        item(
+            span = { GridItemSpan(2) }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isNextDataLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    OutlinedButton(
+                        onClick = {
+                            if (isNextDataLoadingFailure) {
+                                onReloadClick()
+                            } else {
+                                onLoadNextClick()
+                            }
+                        }
+                    ) {
+                        Text(text = stringResource(R.string.load_more))
+                    }
+                }
+
+                if (isNextDataLoadingFailure) {
+                    Failure()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Failure(
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Error,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = stringResource(id = R.string.error_text),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
+}
+
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable

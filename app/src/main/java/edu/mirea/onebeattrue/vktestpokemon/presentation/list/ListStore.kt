@@ -128,7 +128,11 @@ class ListStoreFactory @Inject constructor(
                         try {
                             val oldList = getState().list
                             val pokemonList = reloadPokemonListUseCase()
-                            dispatch(Msg.DataLoaded(oldList + pokemonList))
+                            if (oldList != pokemonList) {
+                                dispatch(Msg.DataLoaded(oldList + pokemonList))
+                            } else {
+                                dispatch(Msg.DataLoaded(oldList))
+                            }
                         } catch (e: Exception) {
                             Log.e("ListStore", "${e.message}")
                             dispatch(Msg.DataLoadedFailure)
@@ -182,6 +186,7 @@ class ListStoreFactory @Inject constructor(
                 Msg.DataReloading -> copy(isDataReloading = true)
 
                 Msg.NextDataLoadedFailure -> copy(
+                    isNextDataLoading = false,
                     isNextDataLoadingFailure = true
                 )
             }
