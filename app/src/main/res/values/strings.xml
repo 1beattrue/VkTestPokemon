@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Vk Test Pokemon</string>
 
     <string name="list_app_bar_title">Pokemon List</string>
-    <string name="error_text">Something went wrong...</string>
+    <string name="error_text">Something went wrong…</string>
     <string name="refresh">Refresh</string>
     <string name="load_more">Load more</string>
 </resources>

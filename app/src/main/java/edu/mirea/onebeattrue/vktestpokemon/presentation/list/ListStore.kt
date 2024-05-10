@@ -27,6 +27,7 @@ interface ListStore : Store<Intent, State, Label> {
     data class State(
         val list: List<Pokemon>,
         val isLoading: Boolean,
+        val isReloading: Boolean,
         val isFailure: Boolean,
         val hasNextData: Boolean
     )
@@ -48,6 +49,7 @@ class ListStoreFactory @Inject constructor(
             initialState = State(
                 list = listOf(),
                 isLoading = true,
+                isReloading = false,
                 isFailure = false,
                 hasNextData = true
             ),
@@ -63,6 +65,7 @@ class ListStoreFactory @Inject constructor(
 
     private sealed interface Msg {
         data object DataLoading : Msg
+        data object DataReloading : Msg
         data class DataLoaded(val list: List<Pokemon>) : Msg
         data object FailureLoading : Msg
         data object NoNewData : Msg
@@ -91,7 +94,7 @@ class ListStoreFactory @Inject constructor(
                         try {
                             val oldData = getState().list
                             val data = loadNextPokemonListUseCase()
-                            if (oldData != data) {
+                            if (oldData.toSet() != data.toSet()) {
                                 dispatch(Msg.DataLoaded(data))
                             } else {
                                 dispatch(Msg.NoNewData)
@@ -105,7 +108,7 @@ class ListStoreFactory @Inject constructor(
 
                 Intent.ReloadData -> {
                     scope.launch {
-                        dispatch(Msg.DataLoading)
+                        dispatch(Msg.DataReloading)
                         try {
                             val data = loadPokemonListUseCase()
                             dispatch(Msg.DataLoaded(data))
@@ -141,6 +144,7 @@ class ListStoreFactory @Inject constructor(
                 is Msg.DataLoaded -> copy(
                     list = msg.list,
                     isLoading = false,
+                    isReloading = false,
                     isFailure = false,
                 )
 
@@ -148,13 +152,19 @@ class ListStoreFactory @Inject constructor(
                     isLoading = true
                 )
 
+                Msg.DataReloading -> copy(
+                    isReloading = true
+                )
+
                 Msg.FailureLoading -> copy(
                     isLoading = false,
+                    isReloading = false,
                     isFailure = true
                 )
 
                 Msg.NoNewData -> copy(
                     isLoading = false,
+                    isReloading = false,
                     isFailure = false,
                     hasNextData = false
                 )

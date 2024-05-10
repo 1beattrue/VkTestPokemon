@@ -8,8 +8,10 @@ data class Pokemon(
     val name: String,
     val weight: Int,
     val height: Int,
-    val backImageUrl: String,
-    val frontImageUrl: String,
+    val backImageUrl: String?,
+    val frontImageUrl: String?,
+    val backShinyUrl: String?,
+    val frontShinyUrl: String?,
     val cryUrl: String,
     val abilities: List<String>
 )

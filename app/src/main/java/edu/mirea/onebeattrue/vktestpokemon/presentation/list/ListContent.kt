@@ -1,5 +1,6 @@
 package edu.mirea.onebeattrue.vktestpokemon.presentation.list
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,20 +8,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -35,15 +36,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -64,7 +69,7 @@ fun ListContent(
     val state by component.model.collectAsState()
 
     val pullRefreshState =
-        rememberPullRefreshState(state.isLoading, { component.reloadData() })
+        rememberPullRefreshState(state.isReloading, { component.reloadData() })
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -113,7 +118,7 @@ fun ListContent(
             }
 
             PullRefreshIndicator(
-                state.isLoading,
+                state.isReloading,
                 pullRefreshState,
                 Modifier.align(Alignment.TopCenter)
             )
@@ -141,25 +146,28 @@ private fun LazyGridScope.loadNext(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (isNextDataLoadingFailure) {
+
+                AnimatedVisibility(
+                    visible = isNextDataLoadingFailure
+                ) {
                     Failure()
                 }
-
-
 
                 if (isNextDataLoading) {
                     CircularProgressIndicator()
                 } else {
-                    OutlinedButton(
-                        onClick = {
-                            if (isNextDataLoadingFailure) {
-                                onReloadClick()
-                            } else {
-                                onLoadNextClick()
-                            }
+                    if (isNextDataLoadingFailure) {
+                        OutlinedButton(
+                            onClick = { onReloadClick() }
+                        ) {
+                            Text(text = stringResource(R.string.refresh))
                         }
-                    ) {
-                        Text(text = stringResource(R.string.load_more))
+                    } else {
+                        OutlinedButton(
+                            onClick = { onLoadNextClick() }
+                        ) {
+                            Text(text = stringResource(R.string.load_more))
+                        }
                     }
                 }
             }
@@ -216,14 +224,19 @@ private fun PokemonCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 GlideImage(
-                    model = pokemon.frontImageUrl,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
+                    model = pokemon.frontImageUrl ?: pokemon.backImageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop
                 )
                 Text(
                     text = pokemon.name,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

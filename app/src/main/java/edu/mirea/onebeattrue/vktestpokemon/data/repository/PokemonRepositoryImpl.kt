@@ -23,7 +23,7 @@ class PokemonRepositoryImpl @Inject constructor(
     }
 
     override suspend fun loadNextPokemonList(): List<Pokemon> {
-        offset += 20
+        offset += LIMIT
         return loadPokemonList()
     }
 
@@ -32,6 +32,6 @@ class PokemonRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        private const val LIMIT = 20
+        private const val LIMIT = 800
     }
 }

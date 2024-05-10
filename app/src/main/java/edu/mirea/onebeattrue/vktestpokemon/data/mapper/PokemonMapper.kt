@@ -11,6 +11,8 @@ fun PokemonDto.toEntity(): Pokemon =
         height = height,
         backImageUrl = sprites.backUrl,
         frontImageUrl = sprites.frontUrl,
+        backShinyUrl = sprites.backShinyUrl,
+        frontShinyUrl = sprites.frontShinyUrl,
         cryUrl = cries.cryUrl,
         abilities = abilities.map {
             it.abilityName.name
