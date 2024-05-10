@@ -8,18 +8,18 @@ import edu.mirea.onebeattrue.vktestpokemon.domain.entity.Pokemon
 
 class DefaultDetailsComponent @AssistedInject constructor(
     @Assisted("pokemon") override val pokemon: Pokemon,
-    @Assisted("onClickBack") private val onClickBack: () -> Unit,
+    @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext,
 ) : DetailsComponent, ComponentContext by componentContext {
     override fun onClickBack() {
-        onClickBack()
+        onBackClicked()
     }
 
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("pokemon") pokemon: Pokemon,
-            @Assisted("onClickBack") onClickBack: () -> Unit,
+            @Assisted("onBackClicked") onBackClicked: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultDetailsComponent
     }

@@ -38,7 +38,7 @@ class DefaultRootComponent @AssistedInject constructor(
     ): RootComponent.Child = when (config) {
         is Config.Details -> {
             val component = detailsComponentFactory.create(
-                onClickBack = { navigation.pop() },
+                onBackClicked = { navigation.pop() },
                 componentContext = componentContext,
                 pokemon = config.pokemon
             )
