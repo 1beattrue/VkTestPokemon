@@ -32,6 +32,6 @@ class PokemonRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        private const val LIMIT = 800
+        private const val LIMIT = 20
     }
 }

@@ -2,6 +2,7 @@ package edu.mirea.onebeattrue.vktestpokemon.presentation.list
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -42,10 +42,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -134,19 +133,18 @@ private fun LazyGridScope.loadNext(
     onLoadNextClick: () -> Unit,
     onReloadClick: () -> Unit
 ) {
-    if (hasNextData) {
-        item(
-            span = { GridItemSpan(2) }
+    item(
+        span = { GridItemSpan(2) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-
+            if (hasNextData) {
                 AnimatedVisibility(
                     visible = isNextDataLoadingFailure
                 ) {
@@ -170,6 +168,11 @@ private fun LazyGridScope.loadNext(
                         }
                     }
                 }
+            } else {
+                Text(
+                    text = stringResource(R.string.the_end),
+                    color = Color.Gray
+                )
             }
         }
     }
@@ -223,14 +226,32 @@ private fun PokemonCard(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                GlideImage(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f),
-                    model = pokemon.frontImageUrl ?: pokemon.backImageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
-                )
+
+                val imageUrl = pokemon.frontImageUrl
+                    ?: pokemon.backImageUrl
+                    ?: pokemon.frontShinyUrl
+                    ?: pokemon.backShinyUrl
+
+                if (imageUrl != null) {
+                    GlideImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.vk),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    )
+                }
+
                 Text(
                     text = pokemon.name,
                     style = MaterialTheme.typography.bodyLarge,
