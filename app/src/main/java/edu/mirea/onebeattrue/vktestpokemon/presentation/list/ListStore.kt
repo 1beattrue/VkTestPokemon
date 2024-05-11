@@ -12,7 +12,9 @@ import edu.mirea.onebeattrue.vktestpokemon.domain.usecase.LoadPokemonListUseCase
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.Intent
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.Label
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.State
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 interface ListStore : Store<Intent, State, Label> {
@@ -75,7 +77,9 @@ class ListStoreFactory @Inject constructor(
         override fun invoke() {
             scope.launch {
                 try {
-                    val data = loadPokemonListUseCase()
+                    val data = withContext(Dispatchers.IO) {
+                        loadPokemonListUseCase()
+                    }
                     dispatch(Action.LoadData(data))
                 } catch (e: Exception) {
                     Log.e("ListStore", "${e.message}")
@@ -93,7 +97,9 @@ class ListStoreFactory @Inject constructor(
                         dispatch(Msg.DataLoading)
                         try {
                             val oldData = getState().list
-                            val data = loadNextPokemonListUseCase()
+                            val data = withContext(Dispatchers.IO) {
+                                loadNextPokemonListUseCase()
+                            }
                             if (oldData.toSet() != data.toSet()) {
                                 dispatch(Msg.DataLoaded(data))
                             } else {
@@ -110,7 +116,9 @@ class ListStoreFactory @Inject constructor(
                     scope.launch {
                         dispatch(Msg.DataReloading)
                         try {
-                            val data = loadPokemonListUseCase()
+                            val data = withContext(Dispatchers.IO) {
+                                loadPokemonListUseCase()
+                            }
                             dispatch(Msg.DataLoaded(data))
                         } catch (e: Exception) {
                             Log.e("ListStore", "${e.message}")
