@@ -6,4 +6,9 @@
     <string name="refresh">Refresh</string>
     <string name="load_more">Load more</string>
     <string name="the_end">The end</string>
+    <string name="cry">Listen to the cry</string>
+    <string name="abilities">Abilities:</string>
+    <string name="characteristics">Characteristics:</string>
+    <string name="height">Height:</string>
+    <string name="weight">Weight:</string>
 </resources>

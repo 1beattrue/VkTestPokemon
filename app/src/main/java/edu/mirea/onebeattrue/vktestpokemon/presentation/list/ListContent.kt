@@ -96,7 +96,7 @@ fun ListContent(
                     end = 16.dp,
                     bottom = 32.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(items = state.list, key = { it.id }) { pokemon ->
@@ -216,7 +216,7 @@ private fun PokemonCard(
                 .fillMaxSize(),
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 16.dp,
-                pressedElevation = 4.dp,
+                pressedElevation = 1.dp,
             ),
             shape = RoundedCornerShape(16.dp),
             onClick = { onPokemonClick() }

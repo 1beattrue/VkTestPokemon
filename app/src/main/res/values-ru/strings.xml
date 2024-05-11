@@ -4,4 +4,9 @@
     <string name="refresh">Обновить</string>
     <string name="load_more">Загрузить еще</string>
     <string name="the_end">Конец</string>
+    <string name="cry">Послушать клич</string>
+    <string name="abilities">Способности:</string>
+    <string name="characteristics">Характеристики:</string>
+    <string name="height">Рост:</string>
+    <string name="weight">Вес:</string>
 </resources>
