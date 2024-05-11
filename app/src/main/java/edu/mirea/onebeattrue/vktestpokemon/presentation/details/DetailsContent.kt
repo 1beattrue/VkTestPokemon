@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.IconButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,8 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import edu.mirea.onebeattrue.vktestpokemon.R
 import edu.mirea.onebeattrue.vktestpokemon.domain.entity.Pokemon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,8 +113,8 @@ private fun CharacteristicsCard(
     CustomCard(modifier = modifier) {
         Text(
             text = stringResource(R.string.characteristics),
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Light
         )
         Text(
             text = buildAnnotatedString {
@@ -142,14 +145,22 @@ private fun AbilitiesCard(
     CustomCard(modifier = modifier) {
         Text(
             text = stringResource(R.string.abilities),
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Light
         )
         abilities.forEach { ability ->
-            Text(
-                text = ability,
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                )
+            ) {
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = ability,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
 }
@@ -193,6 +204,7 @@ private fun PlayAudioCard(
     modifier: Modifier = Modifier,
     cryUrl: String
 ) {
+    val scope = rememberCoroutineScope()
     val audioPlayer = AudioPlayer()
 
     CustomCard(modifier = modifier) {
@@ -203,10 +215,15 @@ private fun PlayAudioCard(
         ) {
             Text(
                 text = stringResource(R.string.cry),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Light
             )
             IconButton(
-                onClick = { audioPlayer.startPlaying(cryUrl) }
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        audioPlayer.startPlaying(cryUrl)
+                    }
+                }
             ) {
                 Icon(imageVector = Icons.Rounded.PlayArrow, contentDescription = null)
             }

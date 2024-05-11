@@ -117,9 +117,10 @@ fun ListContent(
             }
 
             PullRefreshIndicator(
-                state.isReloading,
-                pullRefreshState,
-                Modifier.align(Alignment.TopCenter)
+                refreshing = state.isReloading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                contentColor = MaterialTheme.colorScheme.primary
             )
         }
     }
