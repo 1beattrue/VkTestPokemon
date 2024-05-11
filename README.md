@@ -6,7 +6,7 @@ VKTestPokemon - это приложение, которое позволяет �
 
 ### 1. Список покемонов
 
-<table style="border-collapse: collapse; border: none;">
+<table style="border-collapse: collapse; border-color: transparent;">
   <tr>
     <td style="padding: 0;"><img src="1.png" alt="Список покемонов" style="max-width: 100%;" /></td>
     <td style="padding: 0;"><img src="2.png" alt="Список покемонов" style="max-width: 100%;" /></td>
@@ -17,7 +17,7 @@ VKTestPokemon - это приложение, которое позволяет �
 
 ### 2. Детальная информация о покемоне
 
-<table style="border-collapse: collapse; border: none;">
+<table style="border-collapse: collapse; border-color: transparent;">
   <tr>
     <td style="padding: 0;"><img src="3.png" alt="Информация о покемоне" style="max-width: 100%;" /></td>
     <td style="padding: 0;"><img src="4.png" alt="Информация о покемоне" style="max-width: 100%;" /></td>
