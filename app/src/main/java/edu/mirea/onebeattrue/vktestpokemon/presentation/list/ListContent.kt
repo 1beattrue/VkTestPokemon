@@ -109,7 +109,7 @@ fun ListContent(
                 }
                 loadNext(
                     hasNextData = state.hasNextData,
-                    isNextDataLoading = state.isLoading,
+                    isLoading = state.isLoading || state.isReloading,
                     isNextDataLoadingFailure = state.isFailure,
                     onLoadNextClick = { component.loadNextData() },
                     onReloadClick = { component.reloadData() }
@@ -129,7 +129,7 @@ fun ListContent(
 
 private fun LazyGridScope.loadNext(
     hasNextData: Boolean,
-    isNextDataLoading: Boolean,
+    isLoading: Boolean,
     isNextDataLoadingFailure: Boolean,
     onLoadNextClick: () -> Unit,
     onReloadClick: () -> Unit
@@ -152,7 +152,7 @@ private fun LazyGridScope.loadNext(
                     Failure()
                 }
 
-                if (isNextDataLoading) {
+                if (isLoading) {
                     CircularProgressIndicator()
                 } else {
                     if (isNextDataLoadingFailure) {

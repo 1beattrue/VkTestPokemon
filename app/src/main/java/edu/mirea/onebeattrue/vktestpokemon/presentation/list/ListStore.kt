@@ -13,6 +13,7 @@ import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.Intent
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.Label
 import edu.mirea.onebeattrue.vktestpokemon.presentation.list.ListStore.State
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -90,10 +91,14 @@ class ListStoreFactory @Inject constructor(
     }
 
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
+
+        private var loadingJob: Job? = null
+
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
                 Intent.LoadNextData -> {
-                    scope.launch {
+                    loadingJob?.cancel()
+                    loadingJob = scope.launch {
                         dispatch(Msg.DataLoading)
                         try {
                             val oldData = getState().list
@@ -113,7 +118,8 @@ class ListStoreFactory @Inject constructor(
                 }
 
                 Intent.ReloadData -> {
-                    scope.launch {
+                    loadingJob?.cancel()
+                    loadingJob = scope.launch {
                         dispatch(Msg.DataReloading)
                         try {
                             val data = withContext(Dispatchers.IO) {

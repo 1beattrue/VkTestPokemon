@@ -7,4 +7,6 @@ interface DetailsComponent {
     val pokemon: Pokemon
 
     fun onClickBack()
+
+    fun playCry()
 }

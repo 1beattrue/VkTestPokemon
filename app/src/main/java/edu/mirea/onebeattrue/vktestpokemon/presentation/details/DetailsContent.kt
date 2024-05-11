@@ -11,20 +11,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,8 +41,6 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import edu.mirea.onebeattrue.vktestpokemon.R
 import edu.mirea.onebeattrue.vktestpokemon.domain.entity.Pokemon
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,7 +90,9 @@ fun DetailsContent(
                 ImageCard(pokemon = pokemon)
             }
             item {
-                PlayAudioCard(cryUrl = pokemon.cryUrl)
+                PlayAudioCard {
+                    component.playCry()
+                }
             }
             item {
                 CharacteristicsCard(weight = pokemon.weight, height = pokemon.height)
@@ -202,10 +202,8 @@ private fun ImageCard(
 @Composable
 private fun PlayAudioCard(
     modifier: Modifier = Modifier,
-    cryUrl: String
+    onPlayClick: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    val audioPlayer = AudioPlayer()
 
     CustomCard(modifier = modifier) {
         Row(
@@ -218,18 +216,17 @@ private fun PlayAudioCard(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Light
             )
-            IconButton(
+            OutlinedIconButton(
                 onClick = {
-                    scope.launch(Dispatchers.IO) {
-                        audioPlayer.startPlaying(cryUrl)
-                    }
+                    onPlayClick()
                 }
             ) {
-                Icon(imageVector = Icons.Rounded.PlayArrow, contentDescription = null)
+                Icon(imageVector = Icons.AutoMirrored.Rounded.VolumeUp, contentDescription = null)
             }
         }
     }
 }
+
 
 @Composable
 private fun CustomCard(
